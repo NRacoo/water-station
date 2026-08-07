@@ -26,18 +26,31 @@ export async function getAllEntries() {
 
 
 export async function summarize() {
+  const DAILY_TARGET = 100;
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
+  const startOfYesterday = new Date(startOfToday)
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1)
 
+  const endOfYesterday = new Date(startOfToday)
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   sevenDaysAgo.setHours(0, 0, 0, 0)
 
-  const [todaysEntries, weekEntries, devices] = await Promise.all([
+  const [todaysEntries, yesterdayEntries, weekEntries, devices] = await Promise.all([
     prisma.counter.findMany({
       where: { timestamp: { gte: startOfToday } },
       include:{ device: true },
       orderBy: { timestamp: 'asc' },
+    }),
+
+    prisma.counter.findMany({
+      where:{
+        timestamp:{
+          gte:startOfYesterday,
+          lt:endOfYesterday,
+        }
+      }
     }),
 
     prisma.counter.findMany({
@@ -58,6 +71,9 @@ export async function summarize() {
   const totalToday = todaysEntries.reduce(
     (total, entry) => total + entry.counter, 0
   )
+  const dailyProgress = Math.min(
+    (totalToday/DAILY_TARGET) * 100, 100
+  )
 
   const hours =
     new Set(
@@ -75,7 +91,7 @@ export async function summarize() {
   })
 
   const hourlyTrend = Object.entries(hourlyMap).map(
-    ([label, value]) => ({ label, value })
+    ([label, value]) => ({ label, value: Math.min(value, 100) })
   )
 
   // Tren mingguan (7 hari terakhir)
@@ -127,9 +143,24 @@ export async function summarize() {
       timestamp: e.timestamp,
     }))
 
+
+    const totalYesterday = yesterdayEntries.reduce(
+      (total, entry) => total + entry.counter,
+      0
+    )
+
+    const changePercent =
+    totalYesterday === 0
+      ? null
+      : (totalToday - totalYesterday) / totalYesterday
+
   return {
     totalToday,
     avgPerHour,
+    totalYesterday,
+    changePercent,
+    dailyProgress,
+    dailyTarget:DAILY_TARGET,
     hourlyTrend,
     weeklyUsage,
     devices: deviceList,

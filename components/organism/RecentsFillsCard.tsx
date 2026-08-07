@@ -22,7 +22,7 @@ export default function RecentFillsCard({ fills }: RecentFillsCardProps) {
           <ProgressRow
             key={f.id}
             date={`${formatTime(f.timestamp)} — ${f.deviceName}`}
-            percent={Math.max(90 - i * 15, 10)}
+            percent={Math.min(f.counter, 100)}
           />
         ))}
       </div>

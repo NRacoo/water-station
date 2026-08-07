@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 
 interface DashboardLayoutProps {
-  header: ReactNode;
+  header?: ReactNode;
   toolbar: ReactNode;
   rowOne: ReactNode;
   rowTwo: ReactNode;

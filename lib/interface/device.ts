@@ -27,12 +27,16 @@ export interface TrendData {
 }
 
 export interface DashboardSummary {
-  totalToday: number;
-  avgPerHour: number;
-  hourlyTrend: TrendData[];
-  weeklyUsage: TrendData[];
-  devices: DeviceSummary[];
-  recentFills: FillEntry[];
+  totalToday: number
+  totalYesterday: number
+  changePercent: number | null
+  avgPerHour: number
+  dailyProgress: number
+  dailyTarget: number
+  hourlyTrend: TrendData[]
+  weeklyUsage: TrendData[]
+  devices: DeviceSummary[]
+  recentFills: FillEntry[]
 }
 
 export interface Devices{

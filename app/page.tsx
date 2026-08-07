@@ -49,13 +49,13 @@ export default function Home() {
 
   return (
       <DashboardLayout
-        header={<GreetingHeader name="People" onCheckNew={() => alert("Tambah Perangkat Baru")}/>}
+        header={<GreetingHeader name="People"/>}
         toolbar={<ToolbarFilters/>}
         rowOne={
           <>
-          <LiveCounterCard total={summary.totalToday} changePercent={0.12}/>
+          <LiveCounterCard total={summary.totalToday} changePercent={summary.changePercent}/>
           <DeviceInfoBanner/>
-          <UsageTrendCard data={summary.hourlyTrend} currentPercent={Math.min(summary.totalToday, 100)}/>
+          <UsageTrendCard data={summary.hourlyTrend} currentPercent={summary.dailyProgress}/>
           <RecentFillsCard fills={summary.recentFills}/>
           </>
         }

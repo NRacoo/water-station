@@ -15,13 +15,14 @@ interface ButtonProps{
     icon: LucideIcon;
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
     className?: string;
+    opacity?: string
 }
 
 
-export default function Button({ children, variant = 'primary', icon: Icon, onClick, className = '' }: ButtonProps) {
+export default function Button({ children, variant = 'primary', icon: Icon, onClick, className = '', opacity }: ButtonProps) {
   const base = 'inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold font-display transition-colors'
   return (
-    <button onClick={onClick} className={`${base} ${variants[variant]} ${className}`}>
+    <button onClick={onClick} className={`${base} ${variants[variant]} ${className} opacity-${opacity}`}>
       {Icon && <Icon size={16} />}
       {children}
     </button>

@@ -14,7 +14,6 @@ export default function DeviceDetailCard({ device } : DeviceDetailCardProps) {
       <CardHeader
         title="Device Information"
         icon={Cpu}
-        action={<span className="text-xs font-semibold text-primary">See Details</span>}
       />
       <div className="mt-4 flex items-center gap-3">
         <Avatar initials="ESP" tone="primary" size={44} />
@@ -34,7 +33,7 @@ export default function DeviceDetailCard({ device } : DeviceDetailCardProps) {
         </div>
         <div>
           <p className="text-xs text-muted">Debounce Delay</p>
-          <p className="font-display font-semibold text-ink">3 detik</p>
+          <p className="font-display font-semibold text-ink">30 second</p>
         </div>
         <div>
           <p className="text-xs text-muted">Fills Hari Ini</p>

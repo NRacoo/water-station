@@ -14,7 +14,6 @@ export default function ConnectedDevicesCard({ devices } : ConnectedDevicesCardP
       <CardHeader
         title="Connected Devices"
         icon={Router}
-        action={<span className="text-xs font-semibold text-primary">See Details</span>}
       />
       <div className="mt-4 flex flex-col gap-4">
         {devices.map((d) => (

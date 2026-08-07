@@ -5,11 +5,11 @@ import Badge from '../atoms/Badge'
 
 interface LiveCounterProps{
     total:number;
-    changePercent?: number
+    changePercent?: number | null
 }
 
 export default function LiveCounterCard({ total, changePercent = 0 }: LiveCounterProps) {
-  const up = changePercent >= 0
+  const up = changePercent !== null && changePercent >= 0
   return (
     <div className="rounded-2xl bg-white p-5 shadow-card">
       <CardHeader title="Total Fills Today" icon={Droplets} />
@@ -17,8 +17,10 @@ export default function LiveCounterCard({ total, changePercent = 0 }: LiveCounte
         <DigitDisplay value={total} digits={5} />
       </div>
       <div className="mt-3">
-        <Badge tone={up ? 'success' : 'danger'}>
-          {up ? '+' : ''}{Math.round(changePercent * 100)}% vs kemarin
+        <Badge tone={changePercent === null ? "success" : up ? "success" : "danger"}>
+           {changePercent === null
+            ? "New vs kemarin"
+            : `${up ? "+" : ""}${Math.round(changePercent * 100)}% vs kemarin`}
         </Badge>
       </div>
     </div>

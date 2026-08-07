@@ -3,10 +3,11 @@ import Button from '../atoms/Button'
 
 interface GreetingProps{
   name:string;
-  onCheckNew: () => void
+  onCheckNew?: () => void,
+  className?:string
 }
 
-export default function GreetingHeader({ name, onCheckNew } : GreetingProps) {
+export default function GreetingHeader({ name, onCheckNew, className="hidden" } : GreetingProps) {
   return (
     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
       <div>
@@ -17,7 +18,7 @@ export default function GreetingHeader({ name, onCheckNew } : GreetingProps) {
           Berikut ringkasan aktivitas water station hari ini.
         </p>
       </div>
-      <Button icon={Plus} onClick={onCheckNew}>Check New Device</Button>
+      <Button icon={Plus} onClick={onCheckNew} opacity='0'>Check New Device</Button>
     </div>
   )
 }

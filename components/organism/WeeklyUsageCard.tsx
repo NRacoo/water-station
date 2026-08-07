@@ -20,7 +20,6 @@ export default function WeeklyUsageCard({ data }: WeeklyProps) {
       <CardHeader
         title="Weekly Fill Report"
         icon={BarChart3}
-        action={<span className="text-xs font-semibold text-primary">See Details</span>}
       />
       <div className="mt-2 flex items-center gap-2">
         <Badge tone="primary">Fills</Badge>
