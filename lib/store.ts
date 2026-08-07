@@ -3,6 +3,23 @@ import path from "path";
 import { DashboardSummary, Devices, DeviceSummary, FillEntry, TrendData } from "./interface/device";
 import { prisma } from "./prisma";
 
+function getJakartaDate(date: Date | string) {
+  const now = new Date()
+  const jakartaNow = new Date(
+    now.toLocaleString("en-US", {
+      timeZone: "Asia/Jakarta",
+    })
+  );
+
+  jakartaNow.setHours(0, 0, 0, 0)
+
+  return new Date(
+    new Date(date).toLocaleString("en-US", {
+      timeZone: "UTC",
+    })
+  )
+}
+
 
 export async function appendFillEvent({
   deviceId,
@@ -77,7 +94,7 @@ export async function summarize() {
 
   const hours =
     new Set(
-      todaysEntries.map((e) => new Date(e.timestamp).getHours())
+      todaysEntries.map((e) => getJakartaDate(e.timestamp).getHours())
     ).size || 1
 
   const avgPerHour = +(totalToday / hours).toFixed(1)
@@ -95,11 +112,11 @@ export async function summarize() {
   )
 
   // Tren mingguan (7 hari terakhir)
-  const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+  const dayNames = ['Sunday', 'Monday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   const weeklyMap: Record<string, number> = {}
 
   weekEntries.forEach((e) => {
-    const label = dayNames[new Date(e.timestamp).getDay()]
+    const label = dayNames[getJakartaDate(e.timestamp).getDay()]
     weeklyMap[label] = (weeklyMap[label] || 0) + e.counter
   })
 
