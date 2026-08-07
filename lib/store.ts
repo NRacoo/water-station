@@ -1,188 +1,149 @@
-// lib/store.ts
-// -----------------------------------------------------------------------
-// Penyimpanan sederhana berbasis file JSON untuk log counter dari ESP32.
-//
-// CATATAN PENTING:
-// File-based storage ini cocok untuk development/self-hosted (mis. dijalankan
-// di Raspberry Pi / VPS / laptop yang selalu nyala). Kalau nanti deploy ke
-// platform serverless (Vercel dkk), filesystem-nya read-only/temporary,
-// sehingga data TIDAK akan persist. Untuk production, ganti fungsi-fungsi
-// di bawah ini dengan koneksi ke database sungguhan (Postgres/Supabase/
-// Turso/SQLite via Prisma) — struktur data (array of {timestamp, deviceId,
-// counter}) bisa dipakai langsung sebagai skema tabel "fills".
-// -----------------------------------------------------------------------
-
 import fs from "fs";
 import path from "path";
+import { DashboardSummary, Devices, DeviceSummary, FillEntry, TrendData } from "./interface/device";
+import { prisma } from "./prisma";
 
-const DB_PATH = path.join(process.cwd(), "data", "log.json");
 
-export interface FillEntry {
-  id: number;
-  deviceId: string;
-  counter: number;
-  timestamp: string;
-}
-
-export interface DeviceSummary {
-  id: string;
-  name: string;
-  todayCount: number;
-  lastSeen: number;
-  status: "online" | "offline";
-}
-
-export interface TrendData {
-  label: string;
-  value: number;
-}
-
-export interface DashboardSummary {
-  totalToday: number;
-  avgPerHour: number;
-  hourlyTrend: TrendData[];
-  weeklyUsage: TrendData[];
-  devices: DeviceSummary[];
-  recentFills: FillEntry[];
-}
-
-function readLog(): FillEntry[] {
-  try {
-    const raw = fs.readFileSync(DB_PATH, "utf-8");
-    return JSON.parse(raw) as FillEntry[];
-  } catch {
-    return [];
-  }
-}
-
-function writeLog(entries: FillEntry[]): void {
-  fs.writeFileSync(DB_PATH, JSON.stringify(entries, null, 2));
-}
-
-export function appendFillEvent({
+export async function appendFillEvent({
   deviceId,
   counter,
 }: {
-  deviceId: string;
-  counter: number;
-}): FillEntry {
-  const entries = readLog();
-
-  const newEntry: FillEntry = {
-    id: entries.length + 1,
-    deviceId,
-    counter,
-    timestamp: new Date().toISOString(),
-  };
-
-  entries.push(newEntry);
-  writeLog(entries);
-
-  return newEntry;
+  deviceId: string
+  counter: number
+}) {
+  return prisma.counter.create({
+    data: { deviceId, counter },
+  })
 }
 
-export function getAllEntries(): FillEntry[] {
-  return readLog();
+
+export async function getAllEntries() {
+  return prisma.counter.findMany({
+    include: { device: true },
+    orderBy: { timestamp: 'asc' },
+  })
 }
 
-export function summarize(entries: FillEntry[]): DashboardSummary {
-  const today = new Date().toDateString();
 
-  const todaysEntries = entries.filter(
-    (e) => new Date(e.timestamp).toDateString() === today
-  );
+export async function summarize() {
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
 
-  // Total & rata-rata
-  const totalToday = todaysEntries.length;
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  sevenDaysAgo.setHours(0, 0, 0, 0)
+
+  const [todaysEntries, weekEntries, devices] = await Promise.all([
+    prisma.counter.findMany({
+      where: { timestamp: { gte: startOfToday } },
+      include:{ device: true },
+      orderBy: { timestamp: 'asc' },
+    }),
+
+    prisma.counter.findMany({
+      where: { timestamp: { gte: sevenDaysAgo } },
+    }),
+
+    prisma.device.findMany({
+      where: { isActive: true },
+      include: {
+        counters: {
+          where: { timestamp: { gte: startOfToday } },
+        },
+        _count: { select: { counters: true } },
+      },
+    }),
+  ])
+
+  const totalToday = todaysEntries.reduce(
+    (total, entry) => total + entry.counter, 0
+  )
 
   const hours =
     new Set(
       todaysEntries.map((e) => new Date(e.timestamp).getHours())
-    ).size || 1;
+    ).size || 1
 
-  const avgPerHour = Number((totalToday / hours).toFixed(1));
+  const avgPerHour = +(totalToday / hours).toFixed(1)
 
-  // Tren per jam
-  const hourlyMap: Record<string, number> = {};
+  const hourlyMap: Record<string, number> = {}
 
   todaysEntries.forEach((e) => {
-    const hour = new Date(e.timestamp).getHours();
-    const label = `${String(hour).padStart(2, "0")}:00`;
+    const h = new Date(e.timestamp).getHours()
+    const label = `${String(h).padStart(2, '0')}:00`
+    hourlyMap[label] = (hourlyMap[label] || 0) + e.counter;
+  })
 
-    hourlyMap[label] = (hourlyMap[label] ?? 0) + 1;
-  });
+  const hourlyTrend = Object.entries(hourlyMap).map(
+    ([label, value]) => ({ label, value })
+  )
 
-  const hourlyTrend: TrendData[] = Object.entries(hourlyMap).map(
-    ([label, value]) => ({
-      label,
-      value,
-    })
-  );
+  // Tren mingguan (7 hari terakhir)
+  const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+  const weeklyMap: Record<string, number> = {}
 
-  // Tren mingguan
-  const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  weekEntries.forEach((e) => {
+    const label = dayNames[new Date(e.timestamp).getDay()]
+    weeklyMap[label] = (weeklyMap[label] || 0) + e.counter
+  })
 
-  const weeklyMap: Record<string, number> = {};
-
-  entries.forEach((e) => {
-    const day = new Date(e.timestamp);
-    const label = dayNames[day.getDay()];
-
-    weeklyMap[label] = (weeklyMap[label] ?? 0) + 1;
-  });
-
-  const weeklyUsage: TrendData[] = dayNames.map((label) => ({
+  const weeklyUsage = dayNames.map((label) => ({
     label,
-    value: weeklyMap[label] ?? 0,
-  }));
+    value: weeklyMap[label] || 0,
+  }))
 
-  // Ringkasan device
-  const now = Date.now();
+  // Status device: "online" jika ada event dalam 10 menit terakhir
+  const now = Date.now()
 
-  const deviceMap: Record<
-    string,
-    {
-      id: string;
-      name: string;
-      todayCount: number;
-      lastSeen: number;
+  const deviceList = devices.map((d) => {
+    const lastEvent = d.counters[d.counters.length - 1]
+
+    const lastSeen = lastEvent
+      ? new Date(lastEvent.timestamp).getTime()
+      : 0
+
+    const todayCount = d.counters.reduce((total, entry) => total + entry.counter, 0)
+
+    return {
+      id: d.id,
+      name: d.name,
+      project: d.project,
+      todayCount,
+      status:
+        now - lastSeen < 10 * 60 * 1000
+          ? 'online'
+          : 'offline',
     }
-  > = {};
+  })
 
-  entries.forEach((e) => {
-    if (!deviceMap[e.deviceId]) {
-      deviceMap[e.deviceId] = {
-        id: e.deviceId,
-        name: e.deviceId,
-        todayCount: 0,
-        lastSeen: 0,
-      };
-    }
-
-    deviceMap[e.deviceId].lastSeen = Math.max(
-      deviceMap[e.deviceId].lastSeen,
-      new Date(e.timestamp).getTime()
-    );
-
-    if (new Date(e.timestamp).toDateString() === today) {
-      deviceMap[e.deviceId].todayCount++;
-    }
-  });
-
-  const devices: DeviceSummary[] = Object.values(deviceMap).map((device) => ({
-    ...device,
-    status:
-      now - device.lastSeen < 10 * 60 * 1000 ? "online" : "offline",
-  }));
-
-  const recentFills = [...entries].reverse().slice(0, 5);
+  const recentFills = [...todaysEntries]
+    .reverse()
+    .slice(0, 5)
+    .map((e) => ({
+      id: e.id,
+      deviceId: e.deviceId,
+      deviceName: e.device.name,
+      counter:e.counter,
+      timestamp: e.timestamp,
+    }))
 
   return {
     totalToday,
     avgPerHour,
     hourlyTrend,
     weeklyUsage,
-    devices,
+    devices: deviceList,
     recentFills,
-  };
+  }
+}
+export async function registerDevice({name, project, location} : Devices){
+  return prisma.device.create({
+    data:{
+      name, project, location
+    }
+  })
+}
+
+export async function getAllDevices() {
+  return prisma.device.findMany({ orderBy: { createdAt: "desc"} });
 }

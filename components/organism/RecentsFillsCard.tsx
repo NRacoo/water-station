@@ -21,7 +21,7 @@ export default function RecentFillsCard({ fills }: RecentFillsCardProps) {
         {fills.map((f, i) => (
           <ProgressRow
             key={f.id}
-            date={`${formatTime(f.timestamp)} — ${f.deviceId}`}
+            date={`${formatTime(f.timestamp)} — ${f.deviceName}`}
             percent={Math.max(90 - i * 15, 10)}
           />
         ))}

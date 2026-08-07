@@ -9,50 +9,33 @@ import ToolbarFilters from "@/components/organism/ToolbarFilter";
 import UsageTrendCard from "@/components/organism/UsageTrendCard";
 import WeeklyUsageCard from "@/components/organism/WeeklyUsageCard";
 import DashboardLayout from "@/components/templates/DashboardLayout";
-import type { DashboardSummary } from "@/lib/store";
+import type { DashboardSummary } from "@/lib/interface/device";
 import { useEffect, useState } from "react";
 
 interface CounterResponse extends DashboardSummary {
   status: string;
 }
 
+const POLL_INTERVAL_MS = 5000; 
+
 export default function Home() {
   const [active, setActive] = useState("Dashboard");
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const res = await fetch("/api/counter", {
-          cache: "no-store",
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch dashboard data");
-        }
-
-        const json: CounterResponse = await res.json();
-
-        if (!cancelled) {
-          const { status, ...dashboard } = json;
-          setSummary(dashboard);
-        }
-      } catch (error) {
-        console.error("Gagal memuat data counter:", error);
-      }
-    }
-
-    load();
-
-    const interval = setInterval(load, 5000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
+  useEffect(() => { 
+    let cancelled = false; 
+    async function load() { 
+      try { 
+        const res = await fetch("/api/counter", { cache: "no-store", }); 
+        if (!res.ok) { throw new Error("Failed to fetch dashboard data"); } 
+        const json: CounterResponse = await res.json(); 
+        if (!cancelled) { const { status, ...dashboard } = json; 
+        if (status) { setSummary(dashboard); } } } 
+      catch (error) { 
+        console.error("Gagal memuat data counter:", error); } } load(); 
+        const interval = setInterval(load, POLL_INTERVAL_MS); 
+        return () => { cancelled = true; clearInterval(interval); }; 
+      }, []);
 
   if (!summary) {
     return (

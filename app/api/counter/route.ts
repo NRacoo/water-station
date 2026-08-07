@@ -6,6 +6,7 @@ import {
   getAllEntries,
   summarize,
 } from "@/lib/store";
+import { Prisma } from "@/generated/prisma/client";
 
 export const runtime = "nodejs";
 
@@ -29,8 +30,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       status: "success",
       entry: saved,
-    });
+    }, {status: 201});
   } catch (error) {
+     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      return NextResponse.json(
+        { status: 'error', message: 'failed to find device_id' },
+        { status: 404 }
+      )
+    }
     return NextResponse.json(
       {
         status: "error",
@@ -45,11 +52,15 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  const entries = getAllEntries();
-  const summary = summarize(entries);
 
-  return NextResponse.json({
-    status: "success",
-    ...summary,
-  });
+  try {
+      const summary = await summarize();
+    
+      return NextResponse.json({
+        status: true,
+        ...summary,
+      });
+  } catch (error) {
+    return NextResponse.json({ status: false, message: error})
+  }
 }

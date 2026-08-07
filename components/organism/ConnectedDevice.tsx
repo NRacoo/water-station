@@ -18,7 +18,7 @@ export default function ConnectedDevicesCard({ devices } : ConnectedDevicesCardP
       />
       <div className="mt-4 flex flex-col gap-4">
         {devices.map((d) => (
-          <DeviceStatusRow key={d.id} name={d.name} id={d.id} status={d.status} todayCount={d.todayCount} />
+          <DeviceStatusRow key={d.id} name={d.name} status={d.status} todayCount={d.todayCount} />
         ))}
       </div>
     </div>

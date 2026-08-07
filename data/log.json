@@ -3994,5 +3994,17 @@
     "deviceId": "water-station-02",
     "counter": 604,
     "timestamp": "2026-08-04T18:43:00"
+  },
+  {
+    "id": 667,
+    "deviceId": "cf7bcb3d-5456-4b83-a1d5-a6e1f9f81768",
+    "counter": "1",
+    "timestamp": "2026-08-07T08:32:34.484Z"
+  },
+  {
+    "id": 668,
+    "deviceId": "cf7bcb3d-5456-4b83-a1d5-a6e1f9f81768",
+    "counter": "2",
+    "timestamp": "2026-08-07T08:35:05.945Z"
   }
 ]
