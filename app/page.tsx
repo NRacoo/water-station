@@ -10,6 +10,7 @@ import UsageTrendCard from "@/components/organism/UsageTrendCard";
 import WeeklyUsageCard from "@/components/organism/WeeklyUsageCard";
 import DashboardLayout from "@/components/templates/DashboardLayout";
 import type { DashboardSummary } from "@/lib/interface/device";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface CounterResponse extends DashboardSummary {
@@ -40,7 +41,7 @@ export default function Home() {
   if (!summary) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-surface">
-        <div className="mb-4 h-3 w-3 animate-pulse rounded-full bg-foreground [&>svg]:animate-spin" />
+        <Loader2 className="mb-4 h-6 w-6 animate-spin text-foreground" />
         <p className="font-display text-sm text-muted">Load Dashboard Data</p>
       </div>
     )

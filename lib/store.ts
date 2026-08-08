@@ -19,7 +19,7 @@ function getJakartaYMD(date: Date | string = new Date()) {
   return { y, m, day };
 }
 
-// Jam (0-23) dalam waktu Jakarta untuk sebuah timestamp
+
 function getJakartaHour(date: Date | string): number {
   const d = new Date(date);
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -33,7 +33,7 @@ function getJakartaHour(date: Date | string): number {
   return hour;
 }
 
-// Index hari (0=Sunday ... 6=Saturday) dalam waktu Jakarta, konsisten dengan Date.getDay()
+
 function getJakartaDayIndex(date: Date | string): number {
   const d = new Date(date);
   const weekday = new Intl.DateTimeFormat("en-US", {
@@ -53,15 +53,11 @@ function getJakartaDayIndex(date: Date | string): number {
   return map[weekday];
 }
 
-// Mengembalikan instant UTC yang merepresentasikan jam 00:00 Jakarta
-// untuk tanggal (y, m, day) tertentu. Jakarta = UTC+7, tidak ada DST,
-// jadi midnight Jakarta = 17:00 UTC hari sebelumnya.
+
 function jakartaMidnightUTC(y: number, m: number, day: number): Date {
   return new Date(Date.UTC(y, m - 1, day, 0, 0, 0) - 7 * 60 * 60 * 1000);
 }
 
-// Start of "hari ini" (waktu Jakarta), dikembalikan sebagai instant UTC
-// yang aman dipakai langsung di query Prisma (kolom timestamp disimpan UTC).
 function startOfJakartaDay(date: Date | string = new Date()): Date {
   const { y, m, day } = getJakartaYMD(date);
   return jakartaMidnightUTC(y, m, day);
