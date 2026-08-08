@@ -42,7 +42,7 @@ export default function Home() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-surface">
         <Loader2 className="mb-4 h-6 w-6 animate-spin text-foreground" />
-        <p className="font-display text-sm text-muted">Load Dashboard Data</p>
+        <p className="font-display text-sm text-black">Load Dashboard Data</p>
       </div>
     )
   }
