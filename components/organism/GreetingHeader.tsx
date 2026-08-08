@@ -18,7 +18,6 @@ export default function GreetingHeader({ name, onCheckNew, className="hidden" } 
           Berikut ringkasan aktivitas water station hari ini.
         </p>
       </div>
-      <Button icon={Plus} onClick={onCheckNew} opacity='0'>Check New Device</Button>
     </div>
   )
 }

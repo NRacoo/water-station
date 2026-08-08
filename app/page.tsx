@@ -40,7 +40,7 @@ export default function Home() {
   if (!summary) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-surface">
-        <div className="mb-4 h-3 w-3 animate-pulse rounded-full bg-foreground" />
+        <div className="mb-4 h-3 w-3 animate-pulse rounded-full bg-foreground [&>svg]:animate-spin" />
         <p className="font-display text-sm text-muted">Load Dashboard Data</p>
       </div>
     )
